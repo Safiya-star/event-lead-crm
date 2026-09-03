@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html>
+<head> 
+    <title>Join Our Mailing List</title>
+
+    <style> 
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        h1,
+        h2,
+        h3 {
+            margin-top: 0;
+        }
+        
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        select {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .checkbox-group label {
+            display: inline;
+            font-weight: normal ;
+            margin-bottom: 0;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            color: red;
+            margin-top: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="form-container">
+
+        <div style="text-align: center;">
+
+            <h1 style="font-size: 36px; margin-bottom: 10px;">
+                Image Companies
+            </h1>
+            
+            <h2 style="font-size: 26px; margin-top: 0;">
+                Join Our Mailing List
+            </h2>
+
+            <p>Stay connected and let us know what you're interested in.</p>
+        </div>
+
+        <form method="POST">
+
+            {% if database_error %}
+                <p style="color: red;">{{ database_error }}</p>
+            {% endif %}
+            
+            <input
+                type="hidden"
+                name="event_id"
+                value="{{event[0] if event else ''}}"
+            >
+
+        <div class="form-group">
+            <label for="first_name">First Name:</label><br>
+            <input 
+                type="text" 
+                id="first_name" 
+                name="first_name"
+                value="{{ form_data.get('first_name', '') if form_data else '' }}"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="last_name">Last Name:</label><br>
+
+            <input 
+                type="text" 
+                id="last_name" 
+                name="last_name" 
+                value="{{ form_data.get('last_name', '') if form_data else '' }}"
+                required
+            >   
+        </div>
+
+            
+        <div class="form-group">
+            <label for="email">Email Address:</label><br>
+            <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                value="{{ form_data.get('email', '') if form_data else '' }}"
+                required
+            >
+
+            {% if email_error %}
+                <p style="color: red;">{{ email_error }}</p>
+            {% endif %}
+
+        </div>
+            
+        <div class="form-group">
+
+            <label for="phone_number">Phone Number:</label><br>
+            <input 
+                type="tel" 
+                id="phone_number" 
+                name="phone_number"
+                value="{{ form_data.get('phone_number', '') if form_data else '' }}"
+            >  
+                    
+            {% if phone_error %}
+                <p style="color: red;">{{ phone_error }}</p>
+            {% endif %} 
+            
+        </div>
+
+            
+        <div class="form-group">
+            <label for="state">State:</label><br>
+            <input 
+                type="text" 
+                id="state" 
+                name="state"
+                value="{{ form_data.get('state', '') if form_data else '' }}"
+            >
+        
+            {% if state_error %}
+                <p style="color: red;">{{ state_error }}</p>
+            {% endif %}
+        </div>
+
+        <div class="form-group checkbox-group">
+
+            <div class="checkbox-item">
+                <input
+                    type="checkbox"
+                    id="email_consent"
+                    name="email_consent"
+                    value="Yes"
+                    {% if form_data and form_data.get("email_consent") == "Yes" %}checked{% endif %}
+                >
+
+                <label for="email_consent">
+                    Yes, I would like to receive emails and updates.
+                </label>
+            </div>
+        </div>
+
+            <div class="form-group checkbox-group">
+
+                <h3>What are you interested in?</h3>
+            
+            <div class="checkbox-item">
+                <input
+                    type="checkbox"
+                    id="entertainment"
+                    name="interests"
+                    value="Entertainment"
+                    {% if form_data and "Entertainment" in form_data.getlist("interests") %}checked{% endif %}
+                >
+                <label for="entertainment">Entertainment</label>
+            </div>
+            
+            <div class="checkbox-item">
+                <input
+                    type="checkbox"
+                    id="travel"
+                    name="interests"
+                    value="Travel"
+                    {% if form_data and "Travel" in form_data.getlist("interests") %}checked{% endif %}
+                >
+                <label for="travel">Travel</label>
+            </div>
+
+            <div class="checkbox-item">
+                <input
+                    type="checkbox"
+                    id="financial_education"
+                    name="interests"
+                    value="Financial Education"
+                    {% if form_data and "Financial Education" in form_data.getlist("interests") %}checked{% endif %}
+                >
+                <label for="financial_education">Financial Education</label>
+            </div>
+            
+            <div id="shared_qualification_fields" style="display: none;">
+
+    {% if qualification_error %}
+        <p class="error-message">{{ qualification_error }}</p>
+    {% endif %}
+
+    <h3>Additional Information</h3>
+
+    <div class="form-group">
+        <label for="age_range">Age Range:</label>
+
+        <select id="age_range" name="age_range">
+            <option value="">Select age range</option>
+
+            <option value="18-24"
+                {% if form_data and form_data.get("age_range") == "18-24" %}selected{% endif %}>
+                18-24
+            </option>
+
+            <option value="25-34"
+                {% if form_data and form_data.get("age_range") == "25-34" %}selected{% endif %}>
+                25-34
+            </option>
+
+            <option value="35-44"
+                {% if form_data and form_data.get("age_range") == "35-44" %}selected{% endif %}>
+                35-44
+            </option>
+
+            <option value="45-54"
+                {% if form_data and form_data.get("age_range") == "45-54" %}selected{% endif %}>
+                45-54
+            </option>
+
+            <option value="55-64"
+                {% if form_data and form_data.get("age_range") == "55-64" %}selected{% endif %}>
+                55-64
+            </option>
+
+            <option value="65+"
+                {% if form_data and form_data.get("age_range") == "65+" %}selected{% endif %}>
+                65+
+            </option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="income_range">Income Range:</label>
+
+        <select id="income_range" name="income_range">
+            <option value="">Select income range</option>
+
+            <option value="Under $50k"
+                {% if form_data and form_data.get("income_range") == "Under $50k" %}selected{% endif %}>
+                Under $50k
+            </option>
+
+            <option value="$50k-$74,999"
+                {% if form_data and form_data.get("income_range") == "$50k-$74,999" %}selected{% endif %}>
+                $50k-$74,999
+            </option>
+
+            <option value="$75k-$99,999"
+                {% if form_data and form_data.get("income_range") == "$75k-$99,999" %}selected{% endif %}>
+                $75k-$99,999
+            </option>
+
+            <option value="$100k-$149,999"
+                {% if form_data and form_data.get("income_range") == "$100k-$149,999" %}selected{% endif %}>
+                $100k-$149,999
+            </option>
+
+            <option value="$150k+"
+                {% if form_data and form_data.get("income_range") == "$150k+" %}selected{% endif %}>
+                $150k+
+            </option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="marital_status">Marital Status:</label>
+
+        <select id="marital_status" name="marital_status">
+            <option value="">Select marital status</option>
+
+            <option value="Single"
+                {% if form_data and form_data.get("marital_status") == "Single" %}selected{% endif %}>
+                Single
+            </option>
+
+            <option value="Married"
+                {% if form_data and form_data.get("marital_status") == "Married" %}selected{% endif %}>
+                Married
+            </option>
+
+            <option value="Divorced"
+                {% if form_data and form_data.get("marital_status") == "Divorced" %}selected{% endif %}>
+                Divorced
+            </option>
+
+            <option value="Widowed"
+                {% if form_data and form_data.get("marital_status") == "Widowed" %}selected{% endif %}>
+                Widowed
+            </option>
+        </select>
+    </div>
+
+</div>
+
+            <div id="financial_fields" style="display: none;">
+                <h3>Financial Education Information</h3>
+            
+                <div class="form-group">
+                    <label for="has_401k">Do you have a 401(k) plan?</label>
+                    <select id="has_401k" name="has_401k">
+
+                        <option value="">Select Yes/No</option>
+                        <option value="Yes"
+                            {% if form_data and form_data.get("has_401k") == "Yes" %}selected{% endif %}>
+                            Yes
+                        </option>
+
+                        <option value="No"
+                            {% if form_data and form_data.get("has_401k") == "No" %}selected{% endif %}>
+                            No
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="financial_interest">Financial Interest:</label>
+                    <p>What area of financial education interests you?</p>
+                    
+                    <input
+                        type="text"
+                        id="financial_interest"
+                        name="financial_interest"
+                        value="{{ form_data.get('financial_interest', '') if form_data else '' }}"
+                    >
+                </div>
+            </div>
+
+            <button type="submit">Join Mailing List</button>
+                
+        </form>
+
+    </div>
+
+    <script>
+        const travelCheckbox = document.getElementById("travel");
+        const financialCheckbox = document.getElementById("financial_education");
+        const sharedFields = document.getElementById("shared_qualification_fields");
+        const financialFields = document.getElementById("financial_fields");
+
+        function updateQualificationFields() {
+
+            const sharedInputs =
+                sharedFields.querySelectorAll("input, select");
+
+            const financialInputs =
+                financialFields.querySelectorAll("input, select");
+
+            if (travelCheckbox.checked || financialCheckbox.checked) {
+                sharedFields.style.display = "block";
+
+                sharedInputs.forEach(field => {
+                    field.disabled = false;
+                });
+
+            } else {
+                sharedFields.style.display = "none";
+
+                sharedInputs.forEach(field => {
+                    field.disabled = true;
+                });
+            }
+
+            if (financialCheckbox.checked) {
+                financialFields.style.display = "block";
+
+                financialInputs.forEach(field => {
+                    field.disabled = false;
+                });
+
+            } else {
+                financialFields.style.display = "none";
+
+                financialInputs.forEach(field => {
+                    field.disabled = true;
+                });
+            }
+          
+        }
+    
+        travelCheckbox.addEventListener("change", updateQualificationFields);
+        financialCheckbox.addEventListener("change", updateQualificationFields);
+
+        updateQualificationFields();   
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,8 @@
+SELECT
+    contact_id,
+    first_name,
+    last_name,
+    phone_number
+FROM contacts
+ORDER BY contact_id DESC
+LIMIT 5;
