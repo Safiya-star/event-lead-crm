@@ -1,5 +1,6 @@
 from pathlib import Path
 import sqlite3
+import os
 
 from flask import Flask, render_template, request, redirect, url_for
 
@@ -8,13 +9,32 @@ app = Flask(__name__)
 
 # Define the path to the SQLite database file
 project_root = Path(__file__).parent
-database_file = project_root/ "database" / "event_leads.db"
+database_file = Path(
+    os.environ.get(
+        "DATABASE_PATH",
+        project_root / "database" / "event_leads.db"
+    )
+)
 
 # to create the connection helper function
 def get_db_connection():
     conn = sqlite3.connect(database_file, timeout=10)
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
+
+# to open clean schema file and create any missing tables
+def init_database():
+    schema_file = project_root / "sql" / "init_database.sql"
+
+    conn = get_db_connection()
+
+    with open(schema_file, "r", encoding="utf-8") as file:
+        conn.executescript(file.read())
+
+    conn.commit()
+    conn.close()
+
+init_database
 
  # To create helper function to normalize phone number 
 def normalize_phone(phone):
@@ -46,7 +66,7 @@ VALID_INCOME_RANGES = [
     "$50k-$74,999",
     "$75k-$99,999",
     "$100k-$149,999",
-    "150k+"
+    "$150k+"
 ]
 
 VALID_MARITAL_STATUSES = [
