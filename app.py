@@ -403,7 +403,10 @@ def home():
         finally:
             conn.close() 
 
-        return render_template("success")
+        return render_template("success.html")
+
+        # To display the event intake form for a valid GET request
+    return render_template("intake_form.html", event=event)
 
 # To verify that the admin username and password match the protected credentials
 def check_auth(username, password):
@@ -528,16 +531,22 @@ def admin_leads():
         (event_id,)
     ).fetchone()[0]
 
-    # To count the number of email opt-ins 
+    # To count contacts whose most recent email consent for the selected event is Yes
     email_opt_ins = conn.execute(
-        """
-        SELECT COUNT(*)
-        FROM email_consents
-        WHERE consent_status = 'Yes'
-          AND event_id = ?
-        """,
-        (event_id,)
-    ).fetchone()[0]
+    """
+    SELECT COUNT(*)
+    FROM email_consents ec
+    WHERE ec.event_id = ?
+      AND ec.consent_status = 'Yes'
+      AND ec.consent_id = (
+          SELECT MAX(ec2.consent_id)
+          FROM email_consents ec2
+          WHERE ec2.contact_id = ec.contact_id
+            AND ec2.event_id = ec.event_id
+      )
+    """,
+    (event_id,)
+).fetchone()[0]
 
     # To count leads interested in Entertainment 
     entertainment_count = conn.execute(
@@ -585,8 +594,8 @@ def admin_leads():
         travel_count=travel_count,
         financial_count=financial_count
     )
-      
-    return render_template("intake_form.html", event=event)
+
+    
 
 
 if __name__ == "__main__":
