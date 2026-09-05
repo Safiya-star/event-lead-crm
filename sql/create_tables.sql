@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS interests (
     notes TEXT,
 
     FOREIGN KEY (contact_id)
-        REFERENCES contacts(contact_id)
+        REFERENCES contacts(contact_id),
     FOREIGN KEY (event_id)
         REFERENCES events(event_id)
 );

@@ -1,11 +1,36 @@
-# Import Path to work with file and folder locations
+"""
+Command line contact intake utility for the Event Lead CRM.
+
+This script provides a database-driven intake workflow for registering
+contacts at events before or independently of the web-based intake form.
+
+The workflow:
+1. Validates the source event.
+2. Searches for an existing contact by email.
+3. Falls back to phone number matching when necessary.
+4. Creates a new contact when no existing record is found.
+5. Registers the contact for the selected event.
+6. Records email consent history.
+7. Captures areas of interest.
+8. Collects conditional lead qualification information.
+9. Commits the complete intake as a single database transaction.
+
+If an error occurs during intake, the transaction is rolled back to prevent 
+partially saved contact or event data.
+"""
+
+# Import Path to work with file and folder locations.
 from pathlib import Path
-# Import SQLite so Python can interact with the CRM database
+# Import SQLite so Python can interact with the CRM database.
 import sqlite3
 
-# define a reusable function to register a contact for an event
+#---------------------------------------------------------------------
+# Event Registration
+#---------------------------------------------------------------------
+
+# Register a contact for an event while preventing duplicate signups.
 def register_for_event(conn, contact_id, event_id):
-#Try to register the contact for the event and handle duplicate signups
+
     try:
         conn.execute(
             """
@@ -26,8 +51,12 @@ def register_for_event(conn, contact_id, event_id):
     except sqlite3.IntegrityError:
         print("Contact is already registered for this event")
 
-# Define a resusable function to find an existing contact by email
-def find_contact_by_email(conn,email):
+#-------------------------------------------------------------------
+# Contact Lookup and Creation
+#-------------------------------------------------------------------
+
+# Find an existing contact using a normalized email address.
+def find_contact_by_email(conn, email):
     cursor = conn.execute(
         """
         SELECT contact_id, first_name, last_name, email_address
@@ -39,7 +68,7 @@ def find_contact_by_email(conn,email):
 
     return cursor.fetchone()
 
-# Define a reusable function to create a new contact
+# Create a new contact and return the new contact ID.
 def create_contact(conn, first_name, last_name, email, phone_number, state):
     cursor = conn.execute(
         """
@@ -65,7 +94,7 @@ def create_contact(conn, first_name, last_name, email, phone_number, state):
 
     return cursor.lastrowid
 
-# Define a reusable function to find an existing contact by phone number
+# Find an existing contact by normalized phone number.
 def find_contact_by_phone(conn, phone_number):
     cursor = conn.execute(
         """
@@ -78,7 +107,11 @@ def find_contact_by_phone(conn, phone_number):
 
     return cursor.fetchone()
 
-# Define a reusable function to create an interests record
+#------------------------------------------------------------------
+# Interest and Qualification Management
+#------------------------------------------------------------------
+
+# Add an event-specific interest record while preventing duplicates.
 def add_interest(conn, contact_id, event_id, interest_type):
     sql = """
         INSERT INTO interests (
@@ -107,7 +140,7 @@ def add_interest(conn, contact_id, event_id, interest_type):
             "for this contact at this event."
         )
 
-# to save qualification answers to lead_qualification
+# Save or update event-specific qualification responses.
 def save_qualification(
     conn,
     contact_id,
@@ -118,8 +151,9 @@ def save_qualification(
     has_401k,
     financial_interest
 ):
+    
 # to insert answers into lead_qualifications and if already exists
-# it will replace the answers with the newest subsession
+# it will replace the answers with the newest submission.
     conn.execute(
         """
         INSERT INTO lead_qualifications (
@@ -152,8 +186,12 @@ def save_qualification(
             financial_interest
         )
     )
+
+#-----------------------------------------------------------------
+# Interest and Qualification Management
+# ----------------------------------------------------------------
     
-# Normalization function for phone number
+# Normalize phone numbers by keeping digits only.
 def normalize_phone(phone_number):
     return "".join(
         character
@@ -161,7 +199,7 @@ def normalize_phone(phone_number):
         if character.isdigit()    #to keep only numbers
     )
 
-# Create a function to create consent history record
+# Save a new email consent history record for the contact and event.
 def save_email_consent(conn, contact_id, event_id, consent_status):
     conn.execute(
         """
@@ -181,26 +219,37 @@ def save_email_consent(conn, contact_id, event_id, consent_status):
         )
     )
 
-# Find the main Event lead CRM project folder
-project_root = Path(__file__).parent.parent
-# Create the path to the SQLite database file
-database_file = project_root /"database"/ "event_leads.db"
+#-----------------------------------------------------------------
+# Project Paths and Database Connection
+#-----------------------------------------------------------------
 
-# Connect to the SQLite CRM database
+# Identify the Event Lead CRM project root.
+project_root = Path(__file__).parent.parent
+
+# Define the path to the local development database.
+database_file = project_root / "database"/ "event_leads.db"
+
+# Connect to the SQLite CRM database.
 conn = sqlite3.connect(database_file)
 
-# Enable SQLite foreign key enforcement
+# Enable SQLite foreign key enforcement.
 conn.execute("PRAGMA foreign_keys = ON")
 
 print("Connected to Event Lead CRM!")
 
-# to create the rollback safety net
+#-----------------------------------------------------------------
+# Contact Intake Transaction
+#-----------------------------------------------------------------
+
+# Process the complete intake as a single transaction so that 
+# partial records are not saved if an error occurs.
+
 try:
 
-    # Identify the source event here the contact was captured
+    # Validate the source event where the contact was captured.
     event_id = int(input("Enter source event ID:"))
 
-    # Verify that the source event exists
+    
     event = conn.execute(
         """
         SELECT event_id, event_name
@@ -217,13 +266,11 @@ try:
 
     print("Source event:", event[1])
 
-    # Ask for an email address and normalize it by removing outside spaces and converting to lowercase
+    # Match the contact using email or phone before creating a new record.
     email = input("Enter email address: ").strip().lower()
 
-    # Search for an existing contact by email
-    contact = find_contact_by_email(conn,email)
+    contact = find_contact_by_email(conn, email)
 
-    # If the email matches an existing contact, retrieve their ID and register them for the event
     if contact:
         print("Contact found:")
         print(contact)
@@ -232,11 +279,9 @@ try:
         
         register_for_event(conn, contact_id, event_id)
 
-    # If email is not found, ask for a phone number and search for a matching contact
     else:
         print("Email not found")
 
-    # Normalizes and input validate phone number during intake
         while True:
             phone_number = normalize_phone(
                 input("Enter phone number: ").strip()
@@ -248,7 +293,6 @@ try:
             
         phone_contact = find_contact_by_phone(conn, phone_number)
 
-    # If the phone number matches, retrieve the contact ID and register contact for event
         if phone_contact:
             print("Contact found by phone:")
             print(phone_contact)
@@ -257,8 +301,6 @@ try:
             
             register_for_event(conn, contact_id, event_id)
 
-    # If no email or phone match exists, create a new contact and register them for the event
-        else: 
             print("No contact found by email or phone.")
 
             first_name = input("Enter first name:").strip()
@@ -279,7 +321,7 @@ try:
 
             register_for_event(conn, contact_id, event_id)
 
-# To collect the consent during intake
+# Capture and store the contact's email communication preference.
     while True:
         consent_status = input(
             "Would you like to receive emails and updates? (Yes/No):"
@@ -296,7 +338,8 @@ try:
         consent_status
     )
 
-    # to get the current contact record to reflect consent
+    # Update the current contact record with the latest email consent 
+    # status.
     conn.execute(
         """
         UPDATE contacts
@@ -310,13 +353,13 @@ try:
         )
     )
 
-    # To ask for interests
+    # Collect and save the contact's selected areas of interest.
     print("\nSelect interests:")
     print("1 - Entertainment")
     print("2 - Travel")
     print("3 - Financial Education")
 
-    # To create input validation for interest choices
+    # Create input validation for interest choices.
     while True:
         interest_choices = input(
             "Enter one or more choices separated by commas:"
@@ -331,7 +374,8 @@ try:
             break  # leave the loop and continue the program
 
         print("Invalid selection.  Please enter 1, 2, or 3.")
-    # Convert the numbers to names
+
+    # Convert the numbers to names.
     interest_map = {
         "1": "Entertainment",
         "2": "Travel",
@@ -346,13 +390,14 @@ try:
         if choice in interest_map:
             selected_interests.append(interest_map[choice])
 
-    # To save to the database
+    # Save to the database.
     for interest in selected_interests:
         add_interest(conn, contact_id, event_id, interest)
 
     print("Interests saved:", selected_interests)
 
-    # To add qualifcation questions for Travel and Financial Education
+    # Collect qualification information when Travel or Financial
+    # Education is selected.
     needs_qualification = (
         "Travel" in selected_interests
         or "Financial Education" in selected_interests
@@ -360,7 +405,7 @@ try:
     if needs_qualification:
         print("\nAdditional qualification questions:")
 
-    # to crate input validation for age
+    # Create input validation for age.
         valid_age_ranges = [
             "18-24",
             "25-34",
@@ -379,7 +424,7 @@ try:
                 break
             print("Invalid age range. Please choose one of the listed ranges.")
         
-        # to Create input validation
+        # Create input validation.
         valid_income_ranges = [
             "Under $50k",
             "$50k-$74,999",
@@ -398,7 +443,7 @@ try:
                 break
             print("Invalid income range. Please choose one of the listed ranges.")
 
-        # To create input validation for marital status
+        # Create input validation for marital status.
         valid_marital_statuses = [
             "Single",
             "Married",
@@ -408,14 +453,14 @@ try:
 
         while True:
             marital_status = input(
-                "Marital status (Single,Married, Divorced, Widowed): "
+                "Marital status (Single, Married, Divorced, Widowed): "
             ).strip().title()
 
             if marital_status in valid_marital_statuses:
                 break
             print("Invalid marital status. Please choose one of the listed options.")
 
-        # includes input validation for 401k
+        # Input validation for 401k.
         if "Financial Education" in selected_interests:
             while True:
                 has_401k = input(
@@ -447,7 +492,7 @@ try:
 
         print("Qualification information saved!")
 
-# To create a single commit for the entire intake
+# Create a single commit for the entire intake.
     conn.commit()
     print("Intake saved successfully")
 
@@ -456,5 +501,6 @@ except Exception as error:
     print("intake failed. No changes were saved.")
     print("Error:", error)
 
-finally:    #database connection gets closed whether success or fails
+# Database connection gets closed whether success or failure.
+finally:    
     conn.close()

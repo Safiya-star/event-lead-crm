@@ -230,3 +230,58 @@ The protected administrative dashboard provides event-specific lead details and 
 <p align="center">
   <img src="docs/admin-dashboard.png" alt="Event Lead CRM administrative dashboard" width="900">
 </p>
+
+## Local Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Safiya-star/event-lead-crm.git
+cd event-lead-crm
+```
+
+### 2. Create and Activate a Virtual Environment
+
+```bash
+python -m venv venv
+```
+
+Windows:
+
+```bash
+venv\Scripts\activate
+```
+
+### 3. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure Environment Variables
+
+Create your own local environment variables using `.env.example` as a reference:
+
+```text
+ADMIN_USERNAME=your_admin_username
+ADMIN_PASSWORD=your_admin_password
+DATABASE_PATH=path/to/your/event_leads.db
+```
+
+Do not commit real credentials or production database paths to source control.
+
+### 5. Initialize the Database
+
+The application includes SQL schema files inside the `sql/` directory for creating the required SQLite tables.
+
+### 6. Run the Application
+
+```bash
+python app.py
+```
+
+Then open the local application in your browser using an event-specific URL such as:
+
+```text
+http://127.0.0.1:5000/?event_id=1
+```
