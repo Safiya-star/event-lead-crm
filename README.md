@@ -147,23 +147,34 @@ The application includes several safeguards for protecting lead and administrati
 ```text
 event-lead-crm/
 │
-├── app.py                  # Flask application and business logic
-├── requirements.txt        # Python dependencies
-├── passenger_wsgi.py       # Production WSGI entry point
+├── app.py                    # Flask application and business logic
+├── passenger_wsgi.py         # Production WSGI entry point
+├── requirements.txt          # Core application dependencies
+├── requirements-import.txt   # Optional Excel import dependencies
 │
 ├── templates/
-│   ├── intake_form.html    # Mobile lead capture form
-│   ├── success.html        # Submission confirmation page
-│   └── admin_leads.html    # Protected admin dashboard
+│   ├── intake_form.html      # Mobile lead capture form
+│   ├── success.html          # Submission confirmation page
+│   └── admin_leads.html      # Protected admin dashboard
+│
+├── scripts/
+│   ├── contact_intake.py     # Command-line contact intake utility
+│   └── import_seedlist.py    # Optional Excel seed-list import utility
 │
 ├── sql/
-│   └── init_database.sql   # Relational database schema
+│   ├── init_database.sql     # Relational database schema
+│   └── ...                   # Database setup, validation, and test scripts
 │
-├── data/                   # Local source data (excluded from Git)
-├── database/               # Local development database (excluded from Git)
+├── docs/
+│   ├── mobile-intake-form.png
+│   └── admin-dashboard.png
 │
-├── .gitignore              # Files excluded from version control
-└── README.md               # Project documentation
+├── data/                     # Local source data (excluded from Git)
+├── database/                 # Local development database (excluded from Git)
+│
+├── .env.example              # Example environment configuration
+├── .gitignore                # Files excluded from version control
+└── README.md                 # Project documentation
 ```
 ## Development & Deployment
 
@@ -257,6 +268,11 @@ venv\Scripts\activate
 ```bash
 pip install -r requirements.txt
 ```
+
+For the optional Excel seed-list import utility, install:
+
+```bash
+pip install -r requirements-import.txt
 
 ### 4. Configure Environment Variables
 
