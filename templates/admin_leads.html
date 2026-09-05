@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event Leads</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background-color: #f7f7f7;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            margin-top: 25px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #eeeeee;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Event Leads</h1>
+
+    <p><strong>Total Signups:</strong> {{ total_signups }}</p>
+    <p><strong>Email Opt-Ins:</strong> {{ email_opt_ins }}</p>
+    <p><strong>Entertainment:</strong> {{ entertainment_count }}</p>
+    <p><strong>Travel:</strong> {{ travel_count }}</p>
+    <p><strong>Financial Education:</strong> {{ financial_count }}</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Event</th>
+                <th>Signup Date</th>
+                <th>Interests</th>
+                <th>Email Consent</th>
+                <th>Age Range</th>
+                <th>Income Range</th>
+                <th>Marital Status</th>
+                <th>401(k)</th>
+                <th>Financial Interest</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for lead in leads %}
+            <tr>
+                <td>{{ lead[0] }} {{ lead[1] }}</td>
+                <td>{{ lead[2] }}</td>
+                <td>{{ lead[3] }}</td>
+                <td>{{ lead[4] }}</td>
+                <td>{{ lead[5] }}</td>
+                <td>{{ lead[6] or "None selected" }}</td>
+                <td>{{ lead[7] or "No response" }}</td>
+                <td>{{ lead[8] or "" }}</td>
+                <td>{{ lead[9] or "" }}</td>
+                <td>{{ lead[10] or "" }}</td>
+                <td>{{ lead[11] or "" }}</td>
+                <td>{{ lead[12] or "" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

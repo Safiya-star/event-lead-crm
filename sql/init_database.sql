@@ -63,6 +63,8 @@ CREATE TABLE IF NOT EXISTS lead_qualifications (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 
+    UNIQUE(contact_id, event_id),
+
     FOREIGN KEY (contact_id)
         REFERENCES contacts(contact_id),
 

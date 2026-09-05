@@ -1,8 +1,9 @@
 from pathlib import Path
 import sqlite3
 import os
+from functools import wraps
 
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, Response
 
 # Initialize Flask application
 app = Flask(__name__)
@@ -12,7 +13,7 @@ project_root = Path(__file__).parent
 database_file = Path(
     os.environ.get(
         "DATABASE_PATH",
-        project_root / "database" / "event_leads.db"
+        project_root /"event_leads.db"
     )
 )
 
@@ -84,6 +85,11 @@ def success():
 # Define the route for the home page
 @app.route("/", methods=["GET", "POST"])
 def home():
+
+    # To direct protected admin requests to the event leads dashboard
+    if request.method == "GET" and request.args.get("admin") == "1":
+        return admin_leads()
+    
     event_id = request.args.get("event_id")
 
     event = None
@@ -397,8 +403,188 @@ def home():
         finally:
             conn.close() 
 
-        return redirect(url_for("success"))   
+        return render_template("success")
 
+# To verify that the admin username and password match the protected credentials
+def check_auth(username, password):
+    return (
+        username == os.environ.get("ADMIN_USERNAME")
+        and password == os.environ.get("ADMIN_PASSWORD")
+    )
+
+# To request admin login credentials when authentication is missing or incorrect
+def authenticate():
+    return Response(
+        "Authentication required.",
+        401,
+        {"WWW-Authenticate": 'Basic realm="Admin Area"'}
+    )
+
+# To protect admin pages by requiring valid authentication before access
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
+
+        return f(*args, **kwargs)
+
+    return decorated    
+
+# To display the protected event-specific admin lead dashboard
+@app.route("/admin/leads")
+@requires_auth
+def admin_leads():
+    conn = get_db_connection()
+
+    # To identify which event's leads and statistics should be displayed
+    event_id = request.args.get("event_id")
+
+    # To retrieve the contact, event, interest, consent, and qualification details for each event lead
+    leads = conn.execute(
+        """
+        SELECT
+            c.first_name,
+            c.last_name,
+            c.email_address,
+            c.phone_number,
+            e.event_name,
+            es.signup_date,
+            (
+                SELECT GROUP_CONCAT(i.interest_type, ', ')
+                FROM interests i
+                WHERE i.contact_id = c.contact_id
+                  AND i.event_id = es.event_id
+            ) AS interests,
+            (
+                SELECT ec.consent_status
+                FROM email_consents ec
+                WHERE ec.contact_id = c.contact_id
+                  AND ec.event_id = es.event_id
+                ORDER BY ec.consent_id DESC
+                LIMIT 1
+            ) AS email_consent,
+            (
+                SELECT lq.age_range
+                FROM lead_qualifications lq
+                WHERE lq.contact_id = c.contact_id
+                  AND lq.event_id = es.event_id
+                ORDER BY lq.qualification_id DESC
+                LIMIT 1
+            ) AS age_range,
+            (
+                SELECT lq.income_range
+                FROM lead_qualifications lq
+                WHERE lq.contact_id = c.contact_id
+                  AND lq.event_id = es.event_id
+                ORDER BY lq.qualification_id DESC
+                LIMIT 1
+            ) AS income_range,
+            (
+                SELECT lq.marital_status
+                FROM lead_qualifications lq
+                WHERE lq.contact_id = c.contact_id
+                  AND lq.event_id = es.event_id
+                ORDER BY lq.qualification_id DESC
+                LIMIT 1
+            ) AS marital_status,
+            (
+                SELECT lq.has_401k
+                FROM lead_qualifications lq
+                WHERE lq.contact_id = c.contact_id
+                  AND lq.event_id = es.event_id
+                ORDER BY lq.qualification_id DESC
+                LIMIT 1
+            ) AS has_401k,
+            (
+                SELECT lq.financial_interest
+                FROM lead_qualifications lq
+                WHERE lq.contact_id = c.contact_id
+                  AND lq.event_id = es.event_id
+                ORDER BY lq.qualification_id DESC
+                LIMIT 1
+            ) AS financial_interest
+
+        FROM contacts c
+        JOIN event_signups es
+            ON c.contact_id = es.contact_id
+        JOIN events e
+            ON es.event_id = e.event_id
+        WHERE es.event_id = ?
+        ORDER BY es.signup_date DESC
+        """,
+        (event_id,)
+    ).fetchall()
+
+    # To count the total number of signups for the selected events
+    total_signups = conn.execute(
+        """
+        SELECT COUNT(*)
+        FROM event_signups
+        WHERE event_id = ?
+        """,
+        (event_id,)
+    ).fetchone()[0]
+
+    # To count the number of email opt-ins 
+    email_opt_ins = conn.execute(
+        """
+        SELECT COUNT(*)
+        FROM email_consents
+        WHERE consent_status = 'Yes'
+          AND event_id = ?
+        """,
+        (event_id,)
+    ).fetchone()[0]
+
+    # To count leads interested in Entertainment 
+    entertainment_count = conn.execute(
+        """
+        SELECT COUNT(DISTINCT contact_id)
+        FROM interests
+        WHERE interest_type = 'Entertainment'
+          AND event_id = ?
+        """,
+        (event_id,)
+    ).fetchone()[0]
+
+    # To count leads interested in Travel
+    travel_count = conn.execute(
+        """
+        SELECT COUNT(DISTINCT contact_id)
+        FROM interests
+        WHERE interest_type = 'Travel'
+          AND event_id = ?
+        """,
+        (event_id,)
+    ).fetchone()[0]
+
+    # To count leads interested in Financial Education
+    financial_count = conn.execute(
+        """
+        SELECT COUNT(DISTINCT contact_id)
+        FROM interests
+        WHERE interest_type = 'Financial Education'
+          AND event_id = ?
+        """,
+        (event_id,)
+    ).fetchone()[0]
+
+    # To close the database connection after retrieving the dashboard data
+    conn.close()
+
+    # To send the event lead data and summary statistics to the admin dashboard
+    return render_template(
+        "admin_leads.html",
+        leads=leads,
+        total_signups=total_signups,
+        email_opt_ins=email_opt_ins,
+        entertainment_count=entertainment_count,
+        travel_count=travel_count,
+        financial_count=financial_count
+    )
       
     return render_template("intake_form.html", event=event)
 
