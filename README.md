@@ -239,7 +239,7 @@ The mobile-responsive intake form allows event attendees to submit contact infor
 The protected administrative dashboard provides event-specific lead details and summary metrics for signups, communication consent, and areas of interest.
 
 <p align="center">
-  <im<img src="docs/updated-admin-dashboard.png" alt="Event Lead CRM administrative dashboard" width="900">
+  <img src="docs/updated-admin-dashboard.png" alt="Event Lead CRM administrative dashboard" width="900">
 </p>
 
 ## Local Setup
