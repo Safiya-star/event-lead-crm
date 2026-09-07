@@ -86,3 +86,20 @@ CREATE TABLE IF NOT EXISTS email_consents (
     FOREIGN KEY (event_id)
         REFERENCES events(event_id)
 );
+
+-- Create a sample event for local development and portfolio review.
+INSERT INTO events (
+    event_name,
+    event_date,
+    event_location,
+    event_type
+)
+SELECT
+    'Demo Networking Event',
+    '2026-09-01',
+    'Phoenix, AZ',
+    'Networking'
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM events
+);

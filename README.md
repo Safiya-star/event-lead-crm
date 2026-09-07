@@ -133,7 +133,7 @@ Interest, consent, and qualification records are associated with both the contac
 
 The application includes several safeguards for protecting lead and administrative data:
 
-- Administrative dashboard access is protected with HTTP Basic Authentication.
+- Administrative dashboard access is protected through a session-based login system with credentials stored securely in environment variables.
 - Administrative credentials are stored in environment variables rather than hard-coded into the application.
 - Production and development databases can be configured separately using environment variables.
 - Event IDs are validated before submissions are accepted.
@@ -231,7 +231,7 @@ The current version focuses on reliable event-based lead capture, qualification,
 The mobile-responsive intake form allows event attendees to submit contact information, communication consent, interests, and qualification information directly from their phones.
 
 <p align="center">
-  <img src="docs/mobile-intake-form.png" alt="Event Lead CRM mobile intake form" width="350">
+  <img src="docs/updated-mobile-intake-form.png" alt="Event Lead CRM mobile intake form" width="350">
 </p>
 
 ### Administrative Dashboard
@@ -239,7 +239,7 @@ The mobile-responsive intake form allows event attendees to submit contact infor
 The protected administrative dashboard provides event-specific lead details and summary metrics for signups, communication consent, and areas of interest.
 
 <p align="center">
-  <img src="docs/admin-dashboard.png" alt="Event Lead CRM administrative dashboard" width="900">
+  <im<img src="docs/updated-admin-dashboard.png" alt="Event Lead CRM administrative dashboard" width="900">
 </p>
 
 ## Local Setup
@@ -273,22 +273,45 @@ For the optional Excel seed-list import utility, install:
 
 ```bash
 pip install -r requirements-import.txt
+```
 
 ### 4. Configure Environment Variables
 
-Create your own local environment variables using `.env.example` as a reference:
+The application requires environment variables for the administrative dashboard credentials and local SQLite database path. Use `.env.example` as a reference.
 
-```text
-ADMIN_USERNAME=your_admin_username
-ADMIN_PASSWORD=your_admin_password
-DATABASE_PATH=path/to/your/event_leads.db
+For Windows PowerShell:
+
+```powershell
+$env:ADMIN_USERNAME="your_admin_username"
+$env:ADMIN_PASSWORD="your_admin_password"
+$env:SECRET_KEY="your_secret_key"
+$env:DATABASE_PATH="C:\path\to\your\event_leads.db"
 ```
+
+You can verify the database path with:
+
+```powershell
+echo $env:DATABASE_PATH
+```
+
+These variables apply to the current PowerShell session. If the terminal is closed, set them again before running the application.
 
 Do not commit real credentials or production database paths to source control.
 
 ### 5. Initialize the Database
 
-The application includes SQL schema files inside the `sql/` directory for creating the required SQLite tables.
+The application automatically initializes the SQLite database when it starts using the schema defined in `sql/init_database.sql`.
+
+The schema creates the six relational tables used by the CRM:
+
+- `contacts`
+- `events`
+- `event_signups`
+- `interests`
+- `lead_qualifications`
+- `email_consents`
+
+For a fresh local database, the initialization script also creates a generic demo event so the intake workflow can be tested without using production or client data.
 
 ### 6. Run the Application
 

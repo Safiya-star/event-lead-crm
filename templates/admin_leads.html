@@ -3,22 +3,102 @@
 <head>
     <title>Event Leads</title>
 
+    <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    >
+    
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 30px;
-            background-color: #f7f7f7;
+            margin: 0;
+            background-color: #f4f6f8;
+            color: #222;
         }
 
-        h1 {
-            margin-bottom: 20px;
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-header h1 {
+            margin: 0;
+            font-size: 32px;
+        }
+
+        .dashboard-header p {
+            margin-top: 8px;
+            color: #666;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(140px, 1fr));
+            gap: 14px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background-color: white;
+            border: 1px solid #e2e5e9;
+            border-radius: 10px;
+            padding: 14px 16px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        }
+
+        .kpi-label {
+            font-size: 13.5px;
+            color: #666;
+            margin-bottom: 8px;
+            white-space: nowrap;
+        }
+
+        .kpi-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .kpi-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .people-icon {
+            color: #6f42c1;
+        }
+
+        .email-icon {
+            color: #2f80ed;
+        }
+
+        .entertainment-icon {
+            color: #d9468f;
+        }
+
+        .travel-icon {
+            color: #3478db;
+        }
+
+        .financial-icon {
+            color: #2ca66f;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             background-color: white;
-            margin-top: 25px;
+            margin-top: 0px;
         }
 
         th, td {
@@ -34,17 +114,161 @@
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+
+        .table-card {
+            background-color: white;
+            border: 1px solid #e2e5e9;
+            border-radius: 10px;
+            padding: 18px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            overflow-x: auto;
+        }
+
+        .table-header {
+            margin-bottom: 16px;
+        }
+
+        .table-header h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .table-header p {
+            margin: 6px 0 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+            th, td {
+                padding: 10px 12px;
+                border-bottom: 1px solid #e8eaed;
+                text-align: left;
+                vertical-align: middle;
+            }
+
+            th {
+                background-color: #f8f9fa;
+                color: #444;
+                font-size: 13px;
+                font-weight: 600;
+                white-space: nowrap;
+            }
+
+            td {
+                font-size: 13px;
+                color: #222;
+            }
+
+            tr:nth-child(even) {
+                background-color: #fafafa;
+            }
+
+            tbody tr:hover {
+                background-color: #f5f7f9;
+            }
+
+            .status-badge {
+                display: inline-block;
+                padding: 5px 9px;
+                border-radius: 20px;
+                background-color: #e8f5ee;
+                color: #276749;
+                font-size: 12px;
+                font-weight: 600;
+                white-space: nowrap;
+            }
+
+            .status-neutral {
+                color: #666;
+                font-size: 12px;
+            }
+            
+            .logout-link {
+                color: #666;
+                text-decoration: none;
+                font-size: 13px;
+                padding-top: 6px;
+            }
+
+            .logout-link:hover {
+                color: #222;
+            }
+
     </style>
 </head>
 
 <body>
-    <h1>Event Leads</h1>
+    <div class="dashboard-container">
 
-    <p><strong>Total Signups:</strong> {{ total_signups }}</p>
-    <p><strong>Email Opt-Ins:</strong> {{ email_opt_ins }}</p>
-    <p><strong>Entertainment:</strong> {{ entertainment_count }}</p>
-    <p><strong>Travel:</strong> {{ travel_count }}</p>
-    <p><strong>Financial Education:</strong> {{ financial_count }}</p>
+        <div class="dashboard-header">
+            <div>
+                <h1>Event Lead CRM</h1>
+                <p>Administrative Dashboard</p>
+        </div>
+
+        <a href="{{ url_for('admin_logout') }}" class="logout-link">
+            Logout
+        </a>
+    </div>
+
+        <div class="kpi-grid">
+
+        <div class="kpi-card">
+        <div class="kpi-label">
+            <span class="kpi-icon people-icon">
+                <i class="fa-solid fa-users"></i>
+            </span>
+            Total Signups
+        </div>
+        <div class="kpi-value">{{ total_signups }}</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">
+            <span class="kpi-icon email-icon">
+                <i class="fa-solid fa-envelope"></i>
+            </span>
+            Email Opt-Ins
+        </div>
+        <div class="kpi-value">{{ email_opt_ins }}</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">
+            <span class="kpi-icon entertainment-icon">
+                <i class="fa-solid fa-music"></i>
+            </span>
+            Entertainment
+        </div>
+        <div class="kpi-value">{{ entertainment_count }}</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">
+            <span class="kpi-icon travel-icon">
+                <i class="fa-solid fa-plane"></i>
+            </span>
+            Travel
+        </div>
+        <div class="kpi-value">{{ travel_count }}</div>
+    </div>
+
+    <div class="kpi-card">
+        <div class="kpi-label">
+            <span class="kpi-icon financial-icon">
+                <i class="fa-solid fa-chart-column"></i>
+            </span>
+            Financial Education
+        </div>
+        <div class="kpi-value">{{ financial_count }}</div>
+    </div>
+</div>
+
+    <div class="table-card">
+    <div class="table-header">
+        <h2>Event Leads</h2>
+        <p>Lead details and qualification information</p>
+    </div>
 
     <table>
         <thead>
@@ -71,9 +295,19 @@
                 <td>{{ lead[2] }}</td>
                 <td>{{ lead[3] }}</td>
                 <td>{{ lead[4] }}</td>
-                <td>{{ lead[5] }}</td>
+                <td>
+                    {% if lead[5] %}
+                        {{ lead[5][5:7]}}/{{ lead[5][8:10] }}/{{ lead[5][0:4] }}
+                    {% endif %}
+                </td>
                 <td>{{ lead[6] or "None selected" }}</td>
-                <td>{{ lead[7] or "No response" }}</td>
+                <td>
+                    {% if lead[7] == "Yes" %}
+                        <span class="status-badge">✓ Opted In</span>
+                    {% else %}
+                        <span class="status-neutral">{{ lead[7] or "No response" }}</span>
+                    {% endif %}
+                </td>
                 <td>{{ lead[8] or "" }}</td>
                 <td>{{ lead[9] or "" }}</td>
                 <td>{{ lead[10] or "" }}</td>
@@ -83,5 +317,8 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
+    </div>
+
 </body>
 </html>

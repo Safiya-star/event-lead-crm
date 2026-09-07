@@ -1,12 +1,14 @@
 from pathlib import Path
 import sqlite3
 import os
-from functools import wraps
 
-from flask import Flask, render_template, request, redirect, url_for, Response
+from flask import Flask, render_template, request, redirect, url_for, session 
 
 # Initialize Flask application
 app = Flask(__name__)
+
+# Configure the secret key used to securely manage Flask session data.
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-me")
 
 # Define the path to the SQLite database file
 project_root = Path(__file__).parent
@@ -16,6 +18,9 @@ database_file = Path(
         project_root /"event_leads.db"
     )
 )
+
+# Ensure the database directory exists before SQLite creates or opens the file.
+database_file.parent.mkdir(parents=True, exist_ok=True)
 
 # to create the connection helper function
 def get_db_connection():
@@ -35,7 +40,7 @@ def init_database():
     conn.commit()
     conn.close()
 
-init_database
+init_database()
 
  # To create helper function to normalize phone number 
 def normalize_phone(phone):
@@ -284,6 +289,7 @@ def home():
             except sqlite3.IntegrityError:
                 print("Contact is already associated with this event.")
 
+        
         # To record the email consent and update the contact's email permission status in the database
             conn.execute(
                 """
@@ -415,31 +421,37 @@ def check_auth(username, password):
         and password == os.environ.get("ADMIN_PASSWORD")
     )
 
-# To request admin login credentials when authentication is missing or incorrect
-def authenticate():
-    return Response(
-        "Authentication required.",
-        401,
-        {"WWW-Authenticate": 'Basic realm="Admin Area"'}
-    )
+ # Display and process the administrative dashboard login form.
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
 
-# To protect admin pages by requiring valid authentication before access
-def requires_auth(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        auth = request.authorization
+        if check_auth(username, password):
+            session["admin_authenticated"] = True
+            return redirect(url_for("admin_leads", event_id=1))
 
-        if not auth or not check_auth(auth.username, auth.password):
-            return authenticate()
+        return render_template(
+            "admin_login.html",
+            error="Invalid username or password."
+        )
 
-        return f(*args, **kwargs)
-
-    return decorated    
+    return render_template("admin_login.html")
+   
+# End the administrative session and return the user to the login page.
+@app.route("/admin/logout")
+def admin_logout():
+    session.pop("admin_authenticated", None)
+    return redirect(url_for("admin_login"))
 
 # To display the protected event-specific admin lead dashboard
 @app.route("/admin/leads")
-@requires_auth
 def admin_leads():
+    # Redirect unauthenticated users to the administrative login page.
+    if not session.get("admin_authenticated"):
+        return redirect(url_for("admin_login"))
+
     conn = get_db_connection()
 
     # To identify which event's leads and statistics should be displayed
